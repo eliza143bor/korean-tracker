@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>듣기 — Трекер аудирования</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f6f1e7;
+    --paper-2: #efe7d8;
+    --ink: #211c17;
+    --ink-soft: #5c5346;
+    --line: #d9cdb5;
+    --red: #b8443a;
+    --blue: #2c4d76;
+    --gold: #a9822f;
+    --green: #4a6a4d;
+    --card-bg: #fffdf8;
+    --shadow: none;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --paper: #1b1815;
+      --paper-2: #23201b;
+      --ink: #efe8da;
+      --ink-soft: #b8ac97;
+      --line: #3a3327;
+      --red: #d9695d;
+      --blue: #6f93bd;
+      --gold: #cba748;
+      --green: #7fa084;
+      --card-bg: #221f1a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #1b1815;
+    --paper-2: #23201b;
+    --ink: #efe8da;
+    --ink-soft: #b8ac97;
+    --line: #3a3327;
+    --red: #d9695d;
+    --blue: #6f93bd;
+    --gold: #cba748;
+    --green: #7fa084;
+    --card-bg: #221f1a;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100%;
+  }
+  .kfont { font-family: 'Noto Serif KR', serif; }
+
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 28px 20px 64px;
+  }
+
+  header.top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 24px;
+  }
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .brand .glyph {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 34px;
+    font-weight: 700;
+    color: var(--red);
+    line-height: 1;
+  }
+  .brand h1 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  .brand p {
+    margin: 2px 0 0;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .weekbadge {
+    text-align: right;
+    font-size: 12px;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    padding-top: 6px;
+  }
+
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 26px;
+  }
+  .progress-track {
+    flex: 1;
+    height: 6px;
+    background: var(--paper-2);
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--red);
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+  .progress-label {
+    font-size: 13px;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-bottom: 22px;
+  }
+  .tab {
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 10px 4px 8px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--ink-soft);
+    text-align: center;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+    position: relative;
+  }
+  .tab .d-ru {
+    display: block;
+    font-size: 11.5px;
+    letter-spacing: 0.02em;
+  }
+  .tab .d-kr {
+    display: block;
+    font-family: 'Noto Serif KR', serif;
+    font-size: 15px;
+    margin-top: 2px;
+    color: var(--ink);
+  }
+  .tab .dot {
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    margin-top: 6px;
+    background: var(--line);
+  }
+  .tab.done .dot { background: var(--green); }
+  .tab.active {
+    border-color: var(--ink);
+    background: var(--card-bg);
+  }
+  .tab.active .d-kr { color: var(--red); }
+
+  .day-title {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .day-title .kr {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 26px;
+    font-weight: 600;
+  }
+  .day-title .ru {
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+  .day-focus {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    margin: 0 0 20px;
+    line-height: 1.5;
+    padding-bottom: 18px;
+    border-bottom: 1px dashed var(--line);
+  }
+
+  .item {
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent, var(--red));
+    border-radius: 2px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .item-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .check {
+    flex-shrink: 0;
+    width: 21px;
+    height: 21px;
+    margin-top: 1px;
+    border: 1.5px solid var(--ink-soft);
+    border-radius: 50%;
+    background: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: all 0.15s ease;
+  }
+  .check svg { width: 11px; height: 11px; opacity: 0; transition: opacity 0.12s ease; }
+  .check.checked { background: var(--green); border-color: var(--green); }
+  .check.checked svg { opacity: 1; }
+  .item-body { flex: 1; min-width: 0; }
+  .item-title {
+    font-size: 14.5px;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+  .item-title .kr { font-family: 'Noto Serif KR', serif; color: var(--accent, var(--red)); }
+  .item-note {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0 0 10px;
+    line-height: 1.5;
+  }
+  .item-note.done { text-decoration: line-through; opacity: 0.55; }
+  .item-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12.5px;
+    color: var(--blue);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+  }
+  .item-link:hover { border-bottom-color: var(--blue); }
+
+  .legend {
+    margin-top: 28px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .legend b { color: var(--ink); }
+
+  footer.note {
+    margin-top: 30px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    padding: 14px 16px;
+    background: var(--paper-2);
+    border-radius: 2px;
+    border: 1px solid var(--line);
+  }
+
+  @media (max-width: 380px) {
+    .tab .d-kr { font-size: 13px; }
+    .day-title .kr { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <div class="glyph">듣</div>
+      <div>
+        <h1>Трекер аудирования</h1>
+        <p>20 минут корейской речи в день · будни</p>
+      </div>
+    </div>
+    <div class="weekbadge">Неделя 1<br>хангыль · согласные</div>
+  </header>
+
+  <div class="progress-row">
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-label" id="progressLabel">0 / 15</div>
+  </div>
+
+  <nav class="tabs" id="tabs"></nav>
+
+  <section id="dayContent"></section>
+
+  <div class="legend">
+    <b>Как пользоваться:</b> каждый будний день открывай свою вкладку, слушай 3 материала (≈5–7 минут каждый — это и есть ~20 минут) и отмечай кружок, когда прослушала. Ссылки ведут на поиск YouTube по конкретному запросу — так подборка не протухнет и всегда покажет свежие ролики по теме дня. Прогресс сохраняется в этом браузере.
+  </div>
+
+  <footer class="note">
+    Это подборка на первую неделю под твой нынешний этап — различение 평음/격음/경음. Когда пройдём тему, пришли мне «обнови трекер» — соберу следующую неделю под то, что изучаем дальше.
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  var DAYS = [
+    {
+      id: 'mon', ru: 'Пн', kr: '월',
+      titleKr: '가 · 카 · 까', titleRu: 'ряд ㄱ / ㅋ / ㄲ',
+      focus: 'Сегодня — самая частая пара для русскоговорящих: ㄱ путают с русским «г», а разницу с ㅋ и ㄲ почти не слышат. Слушай не отдельные буквы, а слоги парами — 가-카-까 — и лови контраст в силе выдоха и высоте тона.',
+      accent: 'var(--red)',
+      items: [
+        { kr: '기역·키읔·쌍기역', ru: 'Объяснение TTMIK: как на слух отличать ㄱ, ㅋ, ㄲ', q: 'Talk To Me In Korean 기역 키읔 쌍기역 발음 비교' },
+        { kr: '가/카/까', ru: 'Минимальные пары на слух: 가-카-까, 고기-코기 и похожие', q: '한글 최소대립쌍 가 카 까 듣기 연습' },
+        { kr: '발음 비교', ru: 'Korean Unnie произносит слова с этим рядом подряд — тренируй слух на реальной скорости', q: 'Korean Unnie ㄱㅋㄲ 발음 비교' }
+      ]
+    },
+    {
+      id: 'tue', ru: 'Вт', kr: '화',
+      titleKr: '다 · 타 · 따', titleRu: 'ряд ㄷ / ㅌ / ㄸ',
+      focus: 'ㄷ/ㅌ/ㄸ — тот же принцип, что вчера с ㄱ-рядом, но на других согласных. Если вчера контраст давался тяжело, слушай медленнее и делай паузы между словами.',
+      accent: 'var(--blue)',
+      items: [
+        { kr: '디귿·티읕·쌍디귿', ru: 'Объяснение TTMIK: ㄷ, ㅌ, ㄸ на слух', q: 'Talk To Me In Korean 디귿 티읕 쌍디귿 발음 비교' },
+        { kr: '다/타/따', ru: 'Минимальные пары: 달-탈-딸, 다리-타리-따리', q: '한글 최소대립쌍 다 타 따 듣기 연습' },
+        { kr: '발음 비교', ru: 'Korean Unnie — ㄷㅌㄸ в живом темпе', q: 'Korean Unnie ㄷㅌㄸ 발음 비교' }
+      ]
+    },
+    {
+      id: 'wed', ru: 'Ср', kr: '수',
+      titleKr: '바 · 파 · 빠', titleRu: 'ряд ㅂ / ㅍ / ㅃ',
+      focus: 'Середина недели — губной ряд. ㅍ часто сливается с ㅂ у русскоговорящих, потому что в русском нет фонематического противопоставления по придыханию. Держи в голове тест с бумажкой перед ртом.',
+      accent: 'var(--gold)',
+      items: [
+        { kr: '비읍·피읖·쌍비읍', ru: 'Объяснение TTMIK: ㅂ, ㅍ, ㅃ на слух', q: 'Talk To Me In Korean 비읍 피읖 쌍비읍 발음 비교' },
+        { kr: '바/파/빠', ru: 'Минимальные пары: 불-풀-뿔, 바다-파다-빠다', q: '한글 최소대립쌍 바 파 빠 듣기 연습' },
+        { kr: '발음 비교', ru: 'Korean Unnie — ㅂㅍㅃ подряд', q: 'Korean Unnie ㅂㅍㅃ 발음 비교' }
+      ]
+    },
+    {
+      id: 'thu', ru: 'Чт', kr: '목',
+      titleKr: '사 · 싸 · 자 · 차 · 짜', titleRu: 'ㅅ/ㅆ (двойной контраст) + ряд ㅈ/ㅊ/ㅉ',
+      focus: 'ㅅ/ㅆ — особый случай: здесь всего два варианта, а не три (нет придыхательного). А в ряду ㅈ/ㅊ/ㅉ добавляется ещё и лёгкая аффрикатность — слушай, где звук больше похож на «дз», а где на резкое «ц».',
+      accent: 'var(--green)',
+      items: [
+        { kr: '시옷·쌍시옷', ru: 'Разница 사 vs 싸 — где границы контраста в этом ряду', q: '한글 시옷 쌍시옷 발음 차이 듣기' },
+        { kr: '지읒·치읓·쌍지읒', ru: 'Объяснение TTMIK: ㅈ, ㅊ, ㅉ на слух', q: 'Talk To Me In Korean 지읒 치읓 쌍지읒 발음 비교' },
+        { kr: '자/차/짜', ru: 'Минимальные пары: 자다-차다-짜다', q: '한글 최소대립쌍 자 차 짜 듣기 연습' }
+      ]
+    },
+    {
+      id: 'fri', ru: 'Пт', kr: '금',
+      titleKr: '복습', titleRu: 'повторение + живой контекст',
+      focus: 'Пятница — без новых пар. Сначала общий обзор всех рядов, потом — живая речь: короткая детская песенка, где согласные звучат чётко и медленно, это мягкий переход от изолированных слогов к настоящему аудированию.',
+      accent: 'var(--red)',
+      items: [
+        { kr: '총정리', ru: 'Итоговое видео TTMIK по всем согласным недели', q: 'TTMIK 한글 자음 발음 총정리' },
+        { kr: '동요', ru: 'Простая детская песня — чёткая дикция, медленный темп', q: '쉬운 한국어 동요 발음 연습 느리게' },
+        { kr: 'Natural Listening', ru: 'Короткий отрывок из подборки естественного аудирования TTMIK', q: 'Talk To Me In Korean natural korean listening practice beginner' }
+      ]
+    }
+  ];
+
+  var STORAGE_KEY = 'korean-listening-tracker-v1';
+  var state = {};
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    state = raw ? JSON.parse(raw) : {};
+  } catch (e) { state = {}; }
+
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function itemKey(dayId, idx) { return dayId + '-' + idx; }
+
+  function totalDone() {
+    var n = 0;
+    DAYS.forEach(function (d) {
+      d.items.forEach(function (_, i) { if (state[itemKey(d.id, i)]) n++; });
+    });
+    return n;
+  }
+  function totalItems() {
+    var n = 0;
+    DAYS.forEach(function (d) { n += d.items.length; });
+    return n;
+  }
+  function dayDone(d) {
+    return d.items.every(function (_, i) { return state[itemKey(d.id, i)]; }) && d.items.length > 0;
+  }
+
+  function todayIndex() {
+    var dow = new Date().getDay(); // 0 Sun .. 6 Sat
+    var map = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4 };
+    return map.hasOwnProperty(dow) ? map[dow] : 0;
+  }
+
+  var activeIdx = todayIndex();
+
+  function ytLink(q) {
+    return 'https://www.youtube.com/results?search_query=' + encodeURIComponent(q);
+  }
+
+  var checkSvg = '<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 8.5L6.2 12L13 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  function renderTabs() {
+    var el = document.getElementById('tabs');
+    el.innerHTML = '';
+    DAYS.forEach(function (d, i) {
+      var btn = document.createElement('button');
+      btn.className = 'tab' + (i === activeIdx ? ' active' : '') + (dayDone(d) ? ' done' : '');
+      btn.innerHTML = '<span class="d-ru">' + d.ru + '</span><span class="d-kr kfont">' + d.kr + '</span><span class="dot"></span>';
+      btn.addEventListener('click', function () { activeIdx = i; renderAll(); });
+      el.appendChild(btn);
+    });
+  }
+
+  function renderProgress() {
+    var done = totalDone(), total = totalItems();
+    document.getElementById('progressFill').style.width = (total ? (done / total * 100) : 0) + '%';
+    document.getElementById('progressLabel').textContent = done + ' / ' + total;
+  }
+
+  function renderDay() {
+    var d = DAYS[activeIdx];
+    var el = document.getElementById('dayContent');
+    var html = '';
+    html += '<div class="day-title"><span class="kr kfont" style="color:' + d.accent + '">' + d.titleKr + '</span><span class="ru">' + d.titleRu + '</span></div>';
+    html += '<p class="day-focus">' + d.focus + '</p>';
+    d.items.forEach(function (item, i) {
+      var key = itemKey(d.id, i);
+      var checked = !!state[key];
+      html += '<div class="item" style="--accent:' + d.accent + '">';
+      html += '<div class="item-head">';
+      html += '<button class="check' + (checked ? ' checked' : '') + '" data-key="' + key + '" aria-label="Прослушано">' + checkSvg + '</button>';
+      html += '<div class="item-body">';
+      html += '<p class="item-title"><span class="kr kfont">' + item.kr + '</span></p>';
+      html += '<p class="item-note' + (checked ? ' done' : '') + '">' + item.ru + '</p>';
+      html += '<a class="item-link" href="' + ytLink(item.q) + '" target="_blank" rel="noopener">Открыть поиск на YouTube →</a>';
+      html += '</div></div></div>';
+    });
+    el.innerHTML = html;
+
+    el.querySelectorAll('.check').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var key = btn.getAttribute('data-key');
+        state[key] = !state[key];
+        save();
+        renderAll();
+      });
+    });
+  }
+
+  function renderAll() {
+    renderTabs();
+    renderProgress();
+    renderDay();
+  }
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
