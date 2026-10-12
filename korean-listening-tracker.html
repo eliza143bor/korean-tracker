@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>듣기 — Трекер аудирования</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f6f1e7;
+    --paper-2: #efe7d8;
+    --ink: #211c17;
+    --ink-soft: #5c5346;
+    --line: #d9cdb5;
+    --red: #b8443a;
+    --blue: #2c4d76;
+    --gold: #a9822f;
+    --green: #4a6a4d;
+    --card-bg: #fffdf8;
+    --shadow: none;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --paper: #1b1815;
+      --paper-2: #23201b;
+      --ink: #efe8da;
+      --ink-soft: #b8ac97;
+      --line: #3a3327;
+      --red: #d9695d;
+      --blue: #6f93bd;
+      --gold: #cba748;
+      --green: #7fa084;
+      --card-bg: #221f1a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #1b1815;
+    --paper-2: #23201b;
+    --ink: #efe8da;
+    --ink-soft: #b8ac97;
+    --line: #3a3327;
+    --red: #d9695d;
+    --blue: #6f93bd;
+    --gold: #cba748;
+    --green: #7fa084;
+    --card-bg: #221f1a;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100%;
+  }
+  .kfont { font-family: 'Noto Serif KR', serif; }
+
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 28px 20px 64px;
+  }
+
+  header.top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 24px;
+  }
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .brand .glyph {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 34px;
+    font-weight: 700;
+    color: var(--red);
+    line-height: 1;
+  }
+  .brand h1 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  .brand p {
+    margin: 2px 0 0;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .weekbadge {
+    text-align: right;
+    font-size: 12px;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    padding-top: 6px;
+  }
+
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 26px;
+  }
+  .progress-track {
+    flex: 1;
+    height: 6px;
+    background: var(--paper-2);
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--red);
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+  .progress-label {
+    font-size: 13px;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-bottom: 22px;
+  }
+  .tab {
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 10px 4px 8px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--ink-soft);
+    text-align: center;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+    position: relative;
+  }
+  .tab .d-ru {
+    display: block;
+    font-size: 11.5px;
+    letter-spacing: 0.02em;
+  }
+  .tab .d-kr {
+    display: block;
+    font-family: 'Noto Serif KR', serif;
+    font-size: 15px;
+    margin-top: 2px;
+    color: var(--ink);
+  }
+  .tab .dot {
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    margin-top: 6px;
+    background: var(--line);
+  }
+  .tab.done .dot { background: var(--green); }
+  .tab.active {
+    border-color: var(--ink);
+    background: var(--card-bg);
+  }
+  .tab.active .d-kr { color: var(--red); }
+
+  .day-title {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .day-title .kr {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 26px;
+    font-weight: 600;
+  }
+  .day-title .ru {
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+  .day-focus {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    margin: 0 0 20px;
+    line-height: 1.5;
+    padding-bottom: 18px;
+    border-bottom: 1px dashed var(--line);
+  }
+
+  .item {
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent, var(--red));
+    border-radius: 2px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .item-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .check {
+    flex-shrink: 0;
+    width: 21px;
+    height: 21px;
+    margin-top: 1px;
+    border: 1.5px solid var(--ink-soft);
+    border-radius: 50%;
+    background: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: all 0.15s ease;
+  }
+  .check svg { width: 11px; height: 11px; opacity: 0; transition: opacity 0.12s ease; }
+  .check.checked { background: var(--green); border-color: var(--green); }
+  .check.checked svg { opacity: 1; }
+  .item-body { flex: 1; min-width: 0; }
+  .item-title {
+    font-size: 14.5px;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+  .item-title .kr { font-family: 'Noto Serif KR', serif; color: var(--accent, var(--red)); }
+  .item-note {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0 0 10px;
+    line-height: 1.5;
+  }
+  .item-note.done { text-decoration: line-through; opacity: 0.55; }
+  .item-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12.5px;
+    color: var(--blue);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+  }
+  .item-link:hover { border-bottom-color: var(--blue); }
+
+  .legend {
+    margin-top: 28px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .legend b { color: var(--ink); }
+
+  footer.note {
+    margin-top: 30px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    padding: 14px 16px;
+    background: var(--paper-2);
+    border-radius: 2px;
+    border: 1px solid var(--line);
+  }
+
+  @media (max-width: 380px) {
+    .tab .d-kr { font-size: 13px; }
+    .day-title .kr { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <div class="glyph">듣</div>
+      <div>
+        <h1>Трекер аудирования</h1>
+        <p>20 минут корейской речи в день · будни</p>
+      </div>
+    </div>
+    <div class="weekbadge">Неделя 2<br>받침 · слова</div>
+  </header>
+
+  <div class="progress-row">
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-label" id="progressLabel">0 / 15</div>
+  </div>
+
+  <nav class="tabs" id="tabs"></nav>
+
+  <section id="dayContent"></section>
+
+  <div class="legend">
+    <b>Как пользоваться:</b> каждый будний день открывай свою вкладку, слушай 2–3 материала (≈7–10 минут каждый — это и есть ~20 минут) и отмечай кружок, когда прослушала. На этой неделе все ссылки ведут на конкретные видео или плейлисты, а не на поиск, — чтобы ты точно слушала то, что запланировано. Прогресс сохраняется в этом браузере.
+  </div>
+
+  <footer class="note">
+    Прошлая неделя была про отдельные звуки (согласные ряды), а эта — шаг дальше: 받침 (батчим) — как согласная на конце слога меняет звучание в живых словах. Когда пройдём тему, пришли мне «обнови трекер» — соберу следующую под то, что изучаем дальше.
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  var DAYS = [
+    {
+      id: 'mon', ru: 'Пн', kr: '월',
+      titleKr: '받침이 뭐예요?', titleRu: 'что такое받침 и почему это важно',
+      focus: '받침 (батчим) — это согласная внизу слога, например ㄱ в слове 책 или ㅁ в слове 감. Она не исчезает, а меняет звучание слога — и именно это чаще всего мешает понимать слова на слух, даже когда все буквы знакомы. Сегодня — общая картина: все согласные на письме сводятся всего к 7 реальным звукам в конце слога.',
+      accent: 'var(--red)',
+      items: [
+        { kr: '7 категорий받침', ru: '«What is a Batchim?» — 7 групп звуков, которые получаются из 19 букв в конце слога', url: 'https://www.youtube.com/watch?v=sFHVysE2UDg' },
+        { kr: 'Korean Phonics', ru: 'То же самое, но другим голосом и с другими примерами — для закрепления', url: 'https://www.youtube.com/watch?v=tZRBYsoaMXQ' },
+        { kr: '어휘 듣기', ru: 'Первая настоящая тренировка — подборка слов начального уровня на слух (не изолированные слоги, а целые слова)', url: 'https://www.youtube.com/watch?v=0AH7GyWYPos' }
+      ]
+    },
+    {
+      id: 'tue', ru: 'Вт', kr: '화',
+      titleKr: 'ㄱ-그룹 · ㄷ-그룹', titleRu: '«взрывные»받침: звучат как k / t',
+      focus: 'Буквы ㄱ,ㅋ,ㄲ в конце слога всегда звучат как короткое «к» (책 [чхэк]). А ㄷ,ㅌ,ㅅ,ㅆ,ㅈ,ㅊ,ㅎ — все до единой звучат как короткое «т» (옷 [от], 꽃 [ккот]). Это самая частая ловушка: на письме буквы разные, а на слух — один и тот же звук.',
+      accent: 'var(--blue)',
+      items: [
+        { kr: '그룹별 정리', ru: 'Разбор по группам: ㄱㄲㅋ / ㄷㅅㅈㅊㅌㅎㅆ / ㅂㅍ — какая буква в какую группу попадает', url: 'https://www.youtube.com/watch?v=p07v-ts0O7w' },
+        { kr: '기초 복습', ru: 'Ещё один взгляд на те же правила — от другого преподавателя, для закрепления на слух', url: 'https://www.youtube.com/watch?v=jnxlvfL-hCE' },
+        { kr: '받침 + ㅇ', ru: 'TTMIK: что происходит, когда받침 «перетекает» на следующий слог, начинающийся с ㅇ — это объясняет, почему слитная речь звучит не так, как написано', url: 'https://www.youtube.com/watch?v=hW0VJ01LfCI' }
+      ]
+    },
+    {
+      id: 'wed', ru: 'Ср', kr: '수',
+      titleKr: 'ㄴ · ㄹ · ㅁ · ㅇ', titleRu: '«звонкие»받침: звук не меняется',
+      focus: 'Хорошая новость: эти четыре — единственные, которые в конце слога звучат ровно так, как написаны (한 [хан], 물 [муль], 봄 [пом], 강 [канг]). Единственная сложная — ㄹ: это не русское «л» и не «р», а нечто среднее, язык касается нёба и сразу отпускает.',
+      accent: 'var(--gold)',
+      items: [
+        { kr: 'ㄹ 발음', ru: 'Отдельная тренировка именно на ㄹ — самый капризный звук этой группы, с артикуляционными упражнениями', url: 'https://www.youtube.com/watch?v=yxFlmFbUk0o' },
+        { kr: 'ㄴ받침', ru: 'Урок с разбором по согласным: открой видео и слушай раздел про ㄴ받침 (таймкод уже выставлен на нужное место)', url: 'https://www.youtube.com/watch?v=x3kwxK1b94I&t=199s' },
+        { kr: 'Listening #1', ru: 'Плейлист «Korean Listening Comprehension for Absolute Beginners» — открой первое видео и слушай слова целиком, без разбивки на буквы', url: 'https://www.youtube.com/playlist?list=PLAKEOhhoOenOuO7-5X01lamsWKiELAmru' }
+      ]
+    },
+    {
+      id: 'thu', ru: 'Чт', kr: '목',
+      titleKr: 'ㅎ-받침 · 겹받침', titleRu: 'особый случай ㅎ и двойные받침',
+      focus: 'ㅎ в конце слога часто вообще не слышен или сливается со следующим согласным (좋아요 → [조아요]). А ещё бывают слоги с двумя согласными внизу (겹받침 — например 앉다, 읽다) — из двух звучит обычно только один. Это уже тонкости, которые путают даже самих корейцев, так что не пугайся, если с первого раза не отловишь на слух.',
+      accent: 'var(--green)',
+      items: [
+        { kr: 'ㅎ받침', ru: 'Отдельный разбор: как ведёт себя ㅎ в конце слога и куда он «пропадает»', url: 'https://www.youtube.com/watch?v=2Mo9F_2akEQ' },
+        { kr: '겹받침', ru: 'Особенности произношения двойных받침 — тех, что путают даже носителей языка', url: 'https://www.youtube.com/watch?v=KtwCAHVet0w' },
+        { kr: 'Listening Practice', ru: 'Плейлист «Korean Listening Practice for Levels 1 and 2» — ещё один источник слов и коротких фраз для тренировки', url: 'https://www.youtube.com/playlist?list=PLJ8SeVAoE0L4cGkmhuRHIpWGOgY3SCwYL' }
+      ]
+    },
+    {
+      id: 'fri', ru: 'Пт', kr: '금',
+      titleKr: '복습', titleRu: 'повторение + взгляд вперёд',
+      focus: 'Пятница — закрепляем всю неделю на реальных словах и коротких фразах, где받침 работает не в одиночку, а взаимодействует с соседними звуками (это уже следующая большая тема — ассимиляция, которую будем разбирать отдельно). Сегодняшняя цель — не разобрать каждое правило, а просто расслышать, что слова звучат «слитно», а не по буквам.',
+      accent: 'var(--red)',
+      items: [
+        { kr: '전체 복습', ru: 'Полный разбор받침 + первое знакомство с ассимиляцией звуков на реальных словах', url: 'https://www.youtube.com/watch?v=x3kwxK1b94I' },
+        { kr: '90% 외국인', ru: 'Разбор типичных ошибок иностранцев в корейском произношении (с англ. субтитрами) — хороший способ услышать разницу между «книжным» и естественным произношением', url: 'https://www.youtube.com/watch?v=e7KtsAEo-NQ' },
+        { kr: 'Listening Lvl 2', ru: 'Короткий диалог на слух чуть выше твоего уровня — слушай на понимание общего смысла, не каждого слова', url: 'https://www.youtube.com/watch?v=kZl_u5bkMAA' }
+      ]
+    }
+  ];
+
+  var STORAGE_KEY = 'korean-listening-tracker-v2';
+  var state = {};
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    state = raw ? JSON.parse(raw) : {};
+  } catch (e) { state = {}; }
+
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function itemKey(dayId, idx) { return dayId + '-' + idx; }
+
+  function totalDone() {
+    var n = 0;
+    DAYS.forEach(function (d) {
+      d.items.forEach(function (_, i) { if (state[itemKey(d.id, i)]) n++; });
+    });
+    return n;
+  }
+  function totalItems() {
+    var n = 0;
+    DAYS.forEach(function (d) { n += d.items.length; });
+    return n;
+  }
+  function dayDone(d) {
+    return d.items.every(function (_, i) { return state[itemKey(d.id, i)]; }) && d.items.length > 0;
+  }
+
+  function todayIndex() {
+    var dow = new Date().getDay(); // 0 Sun .. 6 Sat
+    var map = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4 };
+    return map.hasOwnProperty(dow) ? map[dow] : 0;
+  }
+
+  var activeIdx = todayIndex();
+
+  var checkSvg = '<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 8.5L6.2 12L13 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  function renderTabs() {
+    var el = document.getElementById('tabs');
+    el.innerHTML = '';
+    DAYS.forEach(function (d, i) {
+      var btn = document.createElement('button');
+      btn.className = 'tab' + (i === activeIdx ? ' active' : '') + (dayDone(d) ? ' done' : '');
+      btn.innerHTML = '<span class="d-ru">' + d.ru + '</span><span class="d-kr kfont">' + d.kr + '</span><span class="dot"></span>';
+      btn.addEventListener('click', function () { activeIdx = i; renderAll(); });
+      el.appendChild(btn);
+    });
+  }
+
+  function renderProgress() {
+    var done = totalDone(), total = totalItems();
+    document.getElementById('progressFill').style.width = (total ? (done / total * 100) : 0) + '%';
+    document.getElementById('progressLabel').textContent = done + ' / ' + total;
+  }
+
+  function renderDay() {
+    var d = DAYS[activeIdx];
+    var el = document.getElementById('dayContent');
+    var html = '';
+    html += '<div class="day-title"><span class="kr kfont" style="color:' + d.accent + '">' + d.titleKr + '</span><span class="ru">' + d.titleRu + '</span></div>';
+    html += '<p class="day-focus">' + d.focus + '</p>';
+    d.items.forEach(function (item, i) {
+      var key = itemKey(d.id, i);
+      var checked = !!state[key];
+      html += '<div class="item" style="--accent:' + d.accent + '">';
+      html += '<div class="item-head">';
+      html += '<button class="check' + (checked ? ' checked' : '') + '" data-key="' + key + '" aria-label="Прослушано">' + checkSvg + '</button>';
+      html += '<div class="item-body">';
+      html += '<p class="item-title"><span class="kr kfont">' + item.kr + '</span></p>';
+      html += '<p class="item-note' + (checked ? ' done' : '') + '">' + item.ru + '</p>';
+      html += '<a class="item-link" href="' + item.url + '" target="_blank" rel="noopener">Открыть на YouTube →</a>';
+      html += '</div></div></div>';
+    });
+    el.innerHTML = html;
+
+    el.querySelectorAll('.check').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var key = btn.getAttribute('data-key');
+        state[key] = !state[key];
+        save();
+        renderAll();
+      });
+    });
+  }
+
+  function renderAll() {
+    renderTabs();
+    renderProgress();
+    renderDay();
+  }
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
